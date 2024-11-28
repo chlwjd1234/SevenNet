@@ -35,10 +35,6 @@ class IrrepsLinear(nn.Module):
 
     def forward(self, data: AtomGraphDataType) -> AtomGraphDataType:
         data[self.key_output] = self.linear(data[self.key_input])
-        with open('/user/hansw/JM/8_CV/3_7net/1_test/input_feat.dat','a') as f:
-            f.write(f'{data[self.key_input].shape}\n')
-        with open('/user/hansw/JM/8_CV/3_7net/1_test/output_feat.dat','a') as f:
-            f.write(f'{data[self.key_output].shape} {data[self.key_output]}\n')
         return data
 
 
