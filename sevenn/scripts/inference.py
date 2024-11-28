@@ -1,4 +1,3 @@
-import inspect
 import csv
 import os
 import tempfile

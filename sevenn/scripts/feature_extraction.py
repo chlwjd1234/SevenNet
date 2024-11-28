@@ -4,6 +4,8 @@ from pathlib import Path
 import torch
 from torch_geometric.loader import DataLoader
 from tqdm import tqdm
+import h5py
+import numpy as np
 from natsort import natsorted
 
 import sevenn._keys as KEY
@@ -14,9 +16,6 @@ def _merge_feature_files(features_dir: Path) -> Dict:
     """Merge all batch feature files into a single file"""
     feature_files = natsorted(features_dir.glob("features_batch_*.pt"))
     all_features = []
-    #all_atomic_numbers = []
-    #all_positions = []
-    #batch_sizes = []
     num_atoms = []
     
     for file in feature_files:
@@ -25,17 +24,32 @@ def _merge_feature_files(features_dir: Path) -> Dict:
         batch_info = saved_dict["batch_info"]
         
         all_features.append(features)
-        #all_atomic_numbers.append(batch_info["atomic_numbers"])
-        #all_positions.append(batch_info["positions"])
-        #batch_sizes.append(batch_info["num_atoms"].sum().item())
         num_atoms.append(batch_info["num_atoms"].sum().item())
-            
+
+    # Convert to numpy arrays
+    features_np = torch.cat(all_features, dim=0).numpy()
+    num_atoms_np = np.array(num_atoms, dtype=np.int32)
+    
+    # Save to HDF5
+    with h5py.File(features_dir / "all_features.h5", 'w') as f:
+        # Create datasets with compression
+        f.create_dataset('features', 
+                        data=features_np,
+                        chunks=True,
+                        compression='gzip')
+        f.create_dataset('num_atoms', 
+                        data=num_atoms_np,
+                        compression='gzip')
+        
+        # Add metadata
+        f.attrs['total_structures'] = len(num_atoms)
+        f.attrs['total_atoms'] = sum(num_atoms)
+
     merged_dict = {
-        "features": torch.cat(all_features, dim=0),
+        "features": torch.from_numpy(features_np),
         "num_atoms": num_atoms
     }
-    
-    torch.save(merged_dict, features_dir / "all_features.pt")
+
     return merged_dict
 
 def extract_features(
@@ -96,26 +110,32 @@ def extract_features(
     model_copy.eval()
 
     print(f"Extracting features from {len(dataset)} structures...")
-    for batch_idx, batch in enumerate(tqdm(loader)):
-        batch = batch.to(device)
-        output = model_copy(batch)
-
-        # Extract features
-        features = output[KEY.NODE_FEATURE]
-        atomic_energies = output.get(KEY.SCALED_ATOMIC_ENERGY, None)
-        
-        batch_info = {
-            #"atomic_numbers": output[KEY.ATOMIC_NUMBERS],
-            "num_atoms": output[KEY.NUM_ATOMS]
-        }
-        
-        save_dict = {
-            "features": features.cpu(),
-            "batch_info": {k: v.cpu() for k, v in batch_info.items()}
-        }
-        
-        torch.save(save_dict, features_dir / f"features_batch_{batch_idx}.pt")
+    with torch.no_grad():
+        for batch_idx, batch in enumerate(tqdm(loader)):
+            batch = batch.to(device)
+            output = model_copy(batch)
+    
+            # Extract features
+            features = output[KEY.NODE_FEATURE]
+            atomic_energies = output.get(KEY.SCALED_ATOMIC_ENERGY, None)
+            
+            batch_info = {
+                #"atomic_numbers": output[KEY.ATOMIC_NUMBERS],
+                "num_atoms": output[KEY.NUM_ATOMS]
+            }
+            
+            save_dict = {
+                "features": features.cpu(),
+                "batch_info": {k: v.cpu() for k, v in batch_info.items()}
+            }
+            
+            torch.save(save_dict, features_dir / f"features_batch_{batch_idx}.pt")
 
     print("Merging feature files...")
     _merge_feature_files(features_dir)
-    print(f"Features saved to {features_dir}/all_features.pt")
+
+        # Clean up temporary PT files
+    for file in features_dir.glob("features_batch_*.pt"):
+        file.unlink()
+        
+    print(f"Features saved to {features_dir}/all_features.h5")
