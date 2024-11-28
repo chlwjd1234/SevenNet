@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.10.2]
+### Added
+- Accelerated graph build routine if matscipy is installed  @hexagonerose
+### Changed
+- matscipy is included as dependency
+
 ## [0.10.1]
 ### Added
 - experimental `SevenNetAtomsDataset` which is memory efficient, can be enabled with `dataset_type='atoms'`
@@ -9,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Save checkpoint_0.pth (model before any training)
 - `SevenNetGraphDataset._file_to_graph_list` -> `SevenNetGraphDataset.file_to_graph_list`
 - Refactoring `SevenNetGraphDataset`, skips computing statistics if it is loaded, more detailed logging
+- Prefer use .get when accessing config dict
 ### Fixed
 - Fix error when loading `SevenNetGraphDataset` with other types of data (ex: extxyz) in one dataset
 

@@ -1,3 +1,4 @@
+import inspect
 import csv
 import os
 import tempfile
@@ -249,6 +250,17 @@ def inference(
     for batch in tqdm(loader):
         batch = batch.to(device)
         output = model(batch)
+        # For the class name and module
+        #print(output.__class__)  # Shows the class name
+        #print(output.__class__.__module__)  # Shows which module it's from
+
+        #print(output.__class__.__mro__)  # Shows inheritance chain
+
+        #print(dir(output))  # Shows all attributes/methods 
+        #print(output)  # Shows all attributes/methods 
+    
+        print(output['x'])
+        #print(inspect.getmodule(output.__class__))  # Shows exact module file
         rec.update(output)
         output_list.extend(util.to_atom_graph_list(output))
 

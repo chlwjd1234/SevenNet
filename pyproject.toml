@@ -1,8 +1,9 @@
 [project]
 name = "sevenn"
-version = "0.10.1"
+version = "0.10.2"
 authors = [
     { name = "Yutack Park", email = "parkyutack@snu.ac.kr" },
+    { name = "Haekwan Jeon", email = "haekwan98@snu.ac.kr" },
     { name = "Jaesun Kim" },
     { name = "Gijin Kim" },
     { name = "Hyungmin An" },
@@ -25,7 +26,10 @@ dependencies = [
     "scikit-learn",
     "torch_geometric>=2.5.0",
     "numpy<2.0",
+    "matscipy",
 ]
+[project.optional-dependencies]
+test = ["matscipy", "pytest-cov>=5"]
 
 
 [project.scripts]
@@ -35,6 +39,7 @@ sevenn_graph_build = "sevenn.main.sevenn_graph_build:main"
 sevenn_inference = "sevenn.main.sevenn_inference:main"
 sevenn_patch_lammps = "sevenn.main.sevenn_patch_lammps:main"
 sevenn_preset = "sevenn.main.sevenn_preset:main"
+sevenn_feature_extraction = "sevenn.main.sevenn_feature_extraction:main"
 
 [project.urls]
 Homepage = "https://github.com/MDIL-SNU/SevenNet"

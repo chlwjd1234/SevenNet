@@ -84,6 +84,8 @@ def init_feature_reduce(config, irreps_x):
     layers = OrderedDict()
     if config[KEY.READOUT_AS_FCN] is False:
         hidden_irreps = Irreps([(irreps_x.dim // 2, (0, 1))])
+        with open('/user/hansw/JM/8_CV/3_7net/1_test/node_feat.dat','a') as f:
+            f.write(f'BEFOREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE')
         layers.update(
             {
                 'reduce_input_to_hidden': IrrepsLinear(
@@ -101,6 +103,8 @@ def init_feature_reduce(config, irreps_x):
                 ),
             }
         )
+        with open('/user/hansw/JM/8_CV/3_7net/1_test/node_feat.dat','a') as f:
+            f.write(f'AFTERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR\n')
     else:
         act = _const.ACTIVATION[config[KEY.READOUT_FCN_ACTIVATION]]
         hidden_neurons = config[KEY.READOUT_FCN_HIDDEN_NEURONS]
@@ -386,7 +390,7 @@ def build_E3_equivariant_model(config: dict, parallel=False):
     layers.update(
         {
             'rescale_atomic_energy': init_shift_scale(config),
-            'reduce_total_enegy': AtomReduce(
+            'reduce_total_energy': AtomReduce(
                 data_key_in=KEY.ATOMIC_ENERGY,
                 data_key_out=KEY.PRED_TOTAL_ENERGY,
             ),
